@@ -4,6 +4,8 @@ import com.smartleave.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,9 +30,11 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+            .requestMatchers("/api/auth/**").permitAll()
+            .anyRequest().authenticated()
+        )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -48,4 +52,10 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+    @Bean
+public RoleHierarchy roleHierarchy() {
+    return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_USER");
+}
+
 }

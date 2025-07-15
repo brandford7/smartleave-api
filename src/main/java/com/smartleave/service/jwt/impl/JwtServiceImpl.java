@@ -1,4 +1,4 @@
-package com.smartleave.service.impl;
+package com.smartleave.service.jwt.impl;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -6,7 +6,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.smartleave.config.JwtProperties;
-import com.smartleave.service.JwtService;
+import com.smartleave.service.jwt.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

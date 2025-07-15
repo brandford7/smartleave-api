@@ -6,7 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.smartleave.dto.auth.AuthResponseDTO;
 import com.smartleave.dto.auth.LoginRequestDTO;
 import com.smartleave.dto.auth.RegisterRequestDTO;
-import com.smartleave.service.AuthService;
+import com.smartleave.service.auth.AuthService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

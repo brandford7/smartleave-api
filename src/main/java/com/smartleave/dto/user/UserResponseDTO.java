@@ -7,8 +7,8 @@ import lombok.Data;
 @Builder
 public class UserResponseDTO {
     private Long id;
-    private String firstname;
-    private String lastname;
+    private String firstName;
+    private String lastName;
     private String username;
     private String email;
 }

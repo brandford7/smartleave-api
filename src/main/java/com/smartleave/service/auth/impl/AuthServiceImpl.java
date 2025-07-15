@@ -1,4 +1,4 @@
-package com.smartleave.service.impl;
+package com.smartleave.service.auth.impl;
 
 import com.smartleave.dto.auth.LoginRequestDTO;
 import com.smartleave.dto.auth.RegisterRequestDTO;
@@ -7,8 +7,8 @@ import com.smartleave.model.Role;
 import com.smartleave.model.User;
 import com.smartleave.repository.RoleRepository;
 import com.smartleave.repository.UserRepository;
-import com.smartleave.service.AuthService;
-import com.smartleave.service.JwtService;
+import com.smartleave.service.auth.AuthService;
+import com.smartleave.service.jwt.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

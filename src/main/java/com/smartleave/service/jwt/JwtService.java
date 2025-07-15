@@ -1,4 +1,4 @@
-package com.smartleave.service;
+package com.smartleave.service.jwt;
 
 import org.springframework.security.core.userdetails.UserDetails;
 

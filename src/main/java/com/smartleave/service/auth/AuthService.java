@@ -1,4 +1,4 @@
-package com.smartleave.service;
+package com.smartleave.service.auth;
 
 import com.smartleave.dto.auth.AuthResponseDTO;
 import com.smartleave.dto.auth.LoginRequestDTO;
