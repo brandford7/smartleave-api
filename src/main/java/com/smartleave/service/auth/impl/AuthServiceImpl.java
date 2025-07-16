@@ -2,6 +2,8 @@ package com.smartleave.service.auth.impl;
 
 import com.smartleave.dto.auth.LoginRequestDTO;
 import com.smartleave.dto.auth.RegisterRequestDTO;
+import com.smartleave.exception.DuplicateResourceException;
+import com.smartleave.exception.ResourceNotFoundException;
 import com.smartleave.dto.auth.AuthResponseDTO;
 import com.smartleave.model.Role;
 import com.smartleave.model.User;
@@ -41,12 +43,16 @@ public class AuthServiceImpl implements AuthService {
         boolean userNameExists = userRepository.existsByUsername(request.getUsername());
         boolean emailExists = userRepository.existsByEmail(request.getEmail());
 
-        if (userNameExists || emailExists) {
-            throw new RuntimeException("Username or Email already exists");
+        if (userNameExists) {
+                throw new DuplicateResourceException("Username already exists");
+        }
+        
+        if (emailExists) {
+                throw new DuplicateResourceException("Email already exists");
         }
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role USER not found"));
 
         User user = User.builder()
                 .firstName(request.getFirstName())
@@ -71,13 +77,13 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponseDTO login(LoginRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsernameOrEmail(),
+                        request.getUserNameOrEmail(),
                         request.getPassword()
                 )
         );
 
-        User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsernameOrEmail(request.getUserNameOrEmail(), request.getUserNameOrEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserDetails userDetails = mapToUserDetails(user);
         String token = jwtService.generateToken(userDetails);

@@ -3,6 +3,8 @@ package com.smartleave.service.user.impl;
 import com.smartleave.dto.user.UserRequestDTO;
 import com.smartleave.dto.user.UserResponseDTO;
 import com.smartleave.dto.user.UserUpdateRequestDTO;
+import com.smartleave.exception.DuplicateResourceException;
+import com.smartleave.exception.ResourceNotFoundException;
 import com.smartleave.model.Role;
 import com.smartleave.model.User;
 import com.smartleave.repository.RoleRepository;
@@ -10,7 +12,6 @@ import com.smartleave.repository.UserRepository;
 import com.smartleave.service.user.UserService;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,90 +38,82 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
         return toDto(user);
     }
 
     @Override
-    public UserResponseDTO createUser(UserRequestDTO request){
-                boolean emailExists= userRepository.existsByEmail(request.getEmail());
-                boolean userNameExists= userRepository.existsByEmail(request.getUsername());
+    public UserResponseDTO createUser(UserRequestDTO request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new DuplicateResourceException("Username already exists");
+        }
 
-                if (userNameExists || emailExists) {
-                    throw new RuntimeException("Username or email exists");
-                }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email already exists");
+        }
 
-                  // Resolve role names to Role entities
-    Set<Role> roleEntities = new HashSet<>();
-    for (String roleName : request.getRoles()) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-        roleEntities.add(role);
-    }
+        Set<Role> roleEntities = new HashSet<>();
+        for (String roleName : request.getRoles()) {
+            Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName));
+            roleEntities.add(role);
+        }
 
-                // Build User entity
-    User user = User.builder()
-            .firstName(request.getFirstName())
-            .lastName(request.getLastName())
-            .username(request.getUsername())
-            .email(request.getEmail())
-            .password(passwordEncoder.encode(request.getPassword()))
-            .roles(roleEntities)
-            .build();
+        User user = User.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .roles(roleEntities)
+                .build();
 
-    User savedUser = userRepository.save(user);
-    return toDto(savedUser);
-
+        User savedUser = userRepository.save(user);
+        return toDto(savedUser);
     }
 
     @Override
     public UserResponseDTO updateProfile(Long id, UserUpdateRequestDTO request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-if (request.getUsername() != null) user.setUsername(request.getUsername());
-
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
 
         User updatedUser = userRepository.save(user);
         return toDto(updatedUser);
     }
 
- @Override
-public UserResponseDTO updateUserByAdmin(Long id, UserUpdateRequestDTO request) {
-    User user = userRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+    @Override
+    public UserResponseDTO updateUserByAdmin(Long id, UserUpdateRequestDTO request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-    user.setFirstName(request.getFirstName());
-    user.setLastName(request.getLastName());
-    user.setEmail(request.getEmail());
-    if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getUsername() != null) user.setUsername(request.getUsername());
 
-    if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-        Set<Role> roles = request.getRoles().stream()
-            .map(roleName -> roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Invalid role: " + roleName)))
-            .collect(Collectors.toSet());
-        user.setRoles(roles);
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            Set<Role> roles = request.getRoles().stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Invalid role: " + roleName)))
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+        }
+
+        User savedUser = userRepository.save(user);
+        return toDto(savedUser);
     }
-
-    User savedUser = userRepository.save(user);
-    return toDto(savedUser);
-}
 
     @Override
     public boolean deleteUser(Long id) {
-        boolean userExists = userRepository.existsById(id);
-
-        if (!userExists) {
-            throw new RuntimeException("User not found with ID: " + id);
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with ID: " + id);
         }
-
-        
-userRepository.deleteById(id);
+        userRepository.deleteById(id);
         return true;
     }
 
